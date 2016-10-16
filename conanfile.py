@@ -57,7 +57,7 @@ class LibxmlConan(ConanFile):
             self.build_with_configure()
     
     def build_windows(self):
-        self.run('cd %s\win32 && cscript configure.js zlib=yes cruntime=/%s %s' % (
+        self.run('cd %s\win32 && cscript configure.js cruntime=/%s %s' % (
             self.src_dir,
             self.settings.compiler.runtime,
             self.configure_options
