@@ -5,7 +5,7 @@ from conans.tools import download, unzip, replace_in_file
 class LibxmlConan(ConanFile):
     name = "libxml2"
     version = "2.9.4"
-    url = "http://github.com/vitallium/conan-qt-libxml"
+    url = "http://github.com/vitallium/conan-libxml2-qt"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
@@ -30,6 +30,25 @@ class LibxmlConan(ConanFile):
              zlib=no lzma=no \
              schemas=no schematron=no \
              threads=no legacy=no"
+        else:
+            self.configure_options = "--without-python \
+             --without-valid \
+             --without-xinclude \
+             --without-xptr \
+             --without-c14n \
+             --without-catalog \
+             --without-regexps \
+             --without-zlib \
+             --without-lzma \
+             --without-schemas \
+             --without-schematron \
+             --without-threads \
+             --without-legacy \
+             "
+            if self.options.shared:
+                self.configure_options += "--disable-static --enable-shared"
+            else:
+                self.configure_options += "--enable-static --disable-shared"
 
     def build(self):
         if self.settings.os == "Windows":
@@ -38,7 +57,7 @@ class LibxmlConan(ConanFile):
             self.build_with_configure()
     
     def build_windows(self):
-        self.run('cd %s\win32 && cscript configure.js zlib=yes cruntime=/%s %s' % (
+        self.run('cd %s\win32 && cscript configure.js cruntime=/%s %s' % (
             self.src_dir,
             self.settings.compiler.runtime,
             self.configure_options
@@ -46,7 +65,15 @@ class LibxmlConan(ConanFile):
         self.run("cd %s\\win32 && nmake /f Makefile.msvc" % self.src_dir)
 
     def build_with_configure(self):
-        pass
+        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
+        self.run("cd %s && chmod +x ./autogen.sh && %s ./autogen.sh --prefix=%s %s" % (
+            self.src_dir,
+            env.command_line,
+            self.package_folder,
+            self.configure_options
+            ))
+        self.run("cd %s && %s make -j5" % (self.src_dir, env.command_line))
+        self.run("cd %s &&%s make install" % (self.src_dir, env.command_line))
 
     def package(self):
         if self.settings.os != "Windows":
