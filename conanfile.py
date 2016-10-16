@@ -5,7 +5,7 @@ from conans.tools import download, unzip, replace_in_file
 class LibxmlConan(ConanFile):
     name = "libxml2"
     version = "2.9.4"
-    url = "http://github.com/vitallium/conan-qt-libxml"
+    url = "http://github.com/vitallium/conan-libxml2-qt"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
