@@ -1,6 +1,6 @@
 from conans import ConanFile, ConfigureEnvironment
 import os, codecs, re
-from conans.tools import download, untargz
+from conans.tools import download, untargz, cpu_count
 
 class LibxmlConan(ConanFile):
     name = "libxml2"
@@ -89,8 +89,8 @@ class LibxmlConan(ConanFile):
             self.package_folder,
             self.configure_options
             ))
-        self.run("cd %s && %s make -j5" % (self.src_dir, env.command_line))
-        self.run("cd %s &&%s make install" % (self.src_dir, env.command_line))
+        self.run("cd %s && %s make -j %s" % (self.src_dir, env.command_line, cpu_count()))
+        self.run("cd %s && %s make install" % (self.src_dir, env.command_line))
 
     def package(self):
         if self.settings.os != "Windows":
