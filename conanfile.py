@@ -1,6 +1,6 @@
 from conans import ConanFile, ConfigureEnvironment
 import os, codecs, re
-from conans.tools import download, untargz, cpu_count
+from conans.tools import download, untargz, cpu_count, os_info
 
 class LibxmlConan(ConanFile):
     name = "libxml2"
@@ -54,11 +54,14 @@ class LibxmlConan(ConanFile):
                 self.configure_options += "--enable-static --disable-shared"
 
     def build(self):
-        if self.settings.os == "Windows":
-            self.build_windows()
+        if os_info.is_windows:
+            if self.settings.compiler == "Visual Studio":
+                self.build_windows()
+            else:
+                self.build_with_configure_mingw()
         else:
             self.build_with_configure()
-    
+
     def build_windows(self):
         # taken from: https://github.com/lasote/conan-libxml2/blob/master/conanfile.py#L38
         icu_headers_paths = self.deps_cpp_info["icu"].include_paths[0]
@@ -81,6 +84,12 @@ class LibxmlConan(ConanFile):
             ))
         self.run("cd %s\\win32 && nmake /f Makefile.msvc" % self.src_dir)
 
+    def normalize_prefix_path(self, p):
+        if os_info.is_windows:
+            return p.replace('\\', '/')
+        else:
+            return p
+
     def build_with_configure(self):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
         self.run("cd %s && %s ./configure --prefix=%s %s" % (
@@ -91,6 +100,23 @@ class LibxmlConan(ConanFile):
             ))
         self.run("cd %s && %s make -j %s" % (self.src_dir, env.command_line, cpu_count()))
         self.run("cd %s && %s make install" % (self.src_dir, env.command_line))
+
+    def build_with_configure_mingw(self):
+        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
+        command_env = env.command_line_env
+        if os_info.is_windows:
+            command_env += " &&"
+            libflags = " ".join(["-l%s" % lib for lib in self.deps_cpp_info.libs])
+            command_env += ' set "LIBS=%s" &&' % libflags
+
+        self.run("%s cd %s && sh ./configure --prefix=%s %s" % (
+            command_env,
+            self.src_dir,
+            self.normalize_prefix_path(self.package_folder),
+            self.configure_options
+            ))
+        self.run("%s cd %s && make -j %s" % (command_env, self.src_dir, cpu_count()))
+        self.run("%s cd %s && make install" % (command_env, self.src_dir))
 
     def package(self):
         if self.settings.os != "Windows":
