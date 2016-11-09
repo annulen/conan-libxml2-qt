@@ -9,7 +9,6 @@ class LibxmlConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
-    generators = "cmake", "txt"
     src_dir = "libxml2-%s" % version
     license = "https://git.gnome.org/browse/libxml2/tree/Copyright"
     requires = "icu/57.1@vitallium/stable"
