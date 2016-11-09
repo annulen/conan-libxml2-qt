@@ -54,11 +54,8 @@ class LibxmlConan(ConanFile):
                 self.configure_options += "--enable-static --disable-shared"
 
     def build(self):
-        if os_info.is_windows:
-            if self.settings.compiler == "Visual Studio":
-                self.build_windows()
-            else:
-                self.build_with_configure_mingw()
+        if self.settings.compiler == "Visual Studio":
+            self.build_windows()
         else:
             self.build_with_configure()
 
@@ -91,17 +88,6 @@ class LibxmlConan(ConanFile):
             return p
 
     def build_with_configure(self):
-        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        self.run("cd %s && %s ./configure --prefix=%s %s" % (
-            self.src_dir,
-            env.command_line,
-            self.package_folder,
-            self.configure_options
-            ))
-        self.run("cd %s && %s make -j %s" % (self.src_dir, env.command_line, cpu_count()))
-        self.run("cd %s && %s make install" % (self.src_dir, env.command_line))
-
-    def build_with_configure_mingw(self):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
         command_env = env.command_line_env
         if os_info.is_windows:
