@@ -33,6 +33,8 @@ class LibxmlConan(ConanFile):
                 threads=no legacy=no"
         else:
             self.configure_options = "--without-python \
+             --with-icu \
+             --without-iconv \
              --without-valid \
              --without-xinclude \
              --without-xptr \
