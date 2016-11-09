@@ -1,6 +1,6 @@
 from conans import ConanFile, ConfigureEnvironment
 import os, codecs, re
-from conans.tools import download, unzip
+from conans.tools import download, untargz, os_info
 
 class LibxmlConan(ConanFile):
     name = "libxml2"
@@ -9,17 +9,16 @@ class LibxmlConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
-    generators = "cmake", "txt"
     src_dir = "libxml2-%s" % version
     license = "https://git.gnome.org/browse/libxml2/tree/Copyright"
-    requires = "icu/57.1@vitallium/stable"
+    requires = "icu/57.1@annulen/stable"
 
     def source(self):
-        zip_name = "libxml2-%s.zip" % self.version
-        url = "https://git.gnome.org/browse/libxml2/snapshot/%s" % zip_name
-        download(url, zip_name)
-        unzip(zip_name)
-        os.unlink(zip_name)
+        tar_name = "libxml2-%s.tar.gz" % self.version
+        url = "http://xmlsoft.org/sources/" + tar_name
+        download(url, tar_name)
+        untargz(tar_name)
+        os.unlink(tar_name)
 
     def configure(self):
         if self.settings.compiler == "Visual Studio":
@@ -34,6 +33,8 @@ class LibxmlConan(ConanFile):
                 threads=no legacy=no"
         else:
             self.configure_options = "--without-python \
+             --with-icu \
+             --without-iconv \
              --without-valid \
              --without-xinclude \
              --without-xptr \
@@ -53,7 +54,7 @@ class LibxmlConan(ConanFile):
                 self.configure_options += "--enable-static --disable-shared"
 
     def build(self):
-        if self.settings.os == "Windows":
+        if self.settings.compiler == "Visual Studio":
             self.build_windows()
         else:
             self.build_with_configure()
@@ -80,16 +81,36 @@ class LibxmlConan(ConanFile):
             ))
         self.run("cd %s\\win32 && nmake /f Makefile.msvc" % self.src_dir)
 
+    def normalize_prefix_path(self, p):
+        if os_info.is_windows:
+            drive, path = os.path.splitdrive(p)
+            msys_path = path.replace('\\', '/')
+            if drive:
+                return '/' + drive.replace(':', '') + msys_path
+            else:
+                return msys_path
+        else:
+            return p
+
     def build_with_configure(self):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        self.run("cd %s && chmod +x ./autogen.sh && %s ./autogen.sh --prefix=%s %s" % (
+        command_env = env.command_line_env
+        if os_info.is_windows:
+            command_env += " &&"
+            libflags = " ".join(["-l%s" % lib for lib in self.deps_cpp_info.libs])
+            print("libflags=" + libflags)
+            command_env += ' set "LIBS=%s" &&' % libflags
+
+        print(command_env)
+#        self.run("chmod +x %s/autogen.sh" % self.src_dir)
+        self.run("%s cd %s && sh ./configure --prefix=%s %s" % (
+            command_env,
             self.src_dir,
-            env.command_line,
-            self.package_folder,
+            self.normalize_prefix_path(self.package_folder),
             self.configure_options
             ))
-        self.run("cd %s && %s make -j5" % (self.src_dir, env.command_line))
-        self.run("cd %s &&%s make install" % (self.src_dir, env.command_line))
+        self.run("%s cd %s && make VERBOSE=1" % (command_env, self.src_dir))
+        self.run("%s cd %s && make install" % (command_env, self.src_dir))
 
     def package(self):
         if self.settings.os != "Windows":
