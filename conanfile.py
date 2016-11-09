@@ -109,14 +109,14 @@ class LibxmlConan(ConanFile):
             libflags = " ".join(["-l%s" % lib for lib in self.deps_cpp_info.libs])
             command_env += ' set "LIBS=%s" &&' % libflags
 
-        self.run("%s cd %s && sh ./configure --prefix=%s %s" % (
+        self.run("%s sh %s/configure --prefix=%s %s" % (
             command_env,
             self.src_dir,
             self.normalize_prefix_path(self.package_folder),
             self.configure_options
             ))
-        self.run("%s cd %s && make -j %s" % (command_env, self.src_dir, cpu_count()))
-        self.run("%s cd %s && make install" % (command_env, self.src_dir))
+        self.run("%s make -j %s" % (command_env, cpu_count()))
+        self.run("%s make install" % command_env)
 
     def package(self):
         if self.settings.os != "Windows":
