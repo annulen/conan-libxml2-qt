@@ -1,0 +1,5 @@
+[requires]
+libxml2/2.9.4@vitallium/stable
+
+[generators]
+cmake

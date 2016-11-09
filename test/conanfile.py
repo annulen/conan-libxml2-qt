@@ -2,11 +2,12 @@ from conans import ConanFile, CMake
 import os
 
 channel = os.getenv("CONAN_CHANNEL", "testing")
-username = os.getenv("CONAN_USERNAME", "vitalluim")
+username = os.getenv("CONAN_USERNAME", "vitallium")
 
 class DefaultNameConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
+    requires = "libxml2/2.9.4@%s/%s" % (username, channel)
 
     def build(self):
         cmake = CMake(self.settings)
