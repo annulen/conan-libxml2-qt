@@ -108,14 +108,16 @@ class LibxmlConan(ConanFile):
         if self.settings.os != "Windows":
             return
 
-        print self.src_dir
         include_path = os.path.join(self.src_dir, "include")
         self.copy("*.h", "include", src=include_path, keep_path=True)
         self.copy(pattern="*.dll", dst="bin", src=self.src_dir, keep_path=False)
         self.copy(pattern="*.lib", dst="lib", src=self.src_dir, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ["libxml2"]
+        if os_info.is_windows:
+            self.cpp_info.libs = ["libxml2"]
+        else:
+            self.cpp_info.libs = ["xml2"]
 
     def compose_msvc_path(self, paths):
         return ";".join("%s" % p.replace("\\", "/") for p in paths)
