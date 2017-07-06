@@ -11,7 +11,7 @@ class LibxmlConan(ConanFile):
     default_options = "shared=False"
     src_dir = "libxml2-%s" % version
     license = "https://git.gnome.org/browse/libxml2/tree/Copyright"
-    requires = "icu/57.1@vitallium/stable"
+    requires = "icu/59.1@vitallium/stable"
 
     def source(self):
         tar_name = "libxml2-%s.tar.gz" % self.version
