@@ -114,7 +114,7 @@ class LibxmlConan(ConanFile):
         self.copy(pattern="*.lib", dst="lib", src=self.src_dir, keep_path=False)
 
     def package_info(self):
-        if os_info.is_windows:
+        if self.settings.compiler == "Visual Studio":
             self.cpp_info.libs = ["libxml2"]
         else:
             self.cpp_info.libs = ["xml2"]
