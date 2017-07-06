@@ -25,12 +25,24 @@ class LibxmlConan(ConanFile):
             if self.options.shared and "MT" in str(self.settings.compiler.runtime):
                 self.options.shared = False
 
-            self.configure_options = "iconv=no xinclude=no \
-                valid=no xptr=no c14n=no \
-                catalog=no regexps=no \
-                zlib=no lzma=no \
-                schemas=no schematron=no \
-                threads=no legacy=no"
+            self.configure_options = "python=no \
+                icu=yes \
+                iconv=no \
+                valid=no \
+                xinclude=no \
+                xptr=no \
+                c14n=no \
+                catalog=no \
+                regexps=no \
+                zlib=no \
+                lzma=no \
+                schemas=no \
+                schematron=no \
+                threads=no \
+                legacy=no \
+                ftp=no \
+                http=no \
+                "
         else:
             self.configure_options = "--without-python \
              --with-icu \
@@ -47,6 +59,8 @@ class LibxmlConan(ConanFile):
              --without-schematron \
              --without-threads \
              --without-legacy \
+             --without-ftp \
+             --without-http \
              "
             if self.options.shared:
                 self.configure_options += "--disable-static --enable-shared"
@@ -72,7 +86,7 @@ class LibxmlConan(ConanFile):
         patched_content = re.sub("icu.lib", " ".join("%s.lib"%i for i in icu_libs), patched_content)
         self.save(makefile_win_path, patched_content)
 
-        self.run('cd %s\win32 && cscript configure.js icu=yes cruntime=/%s include=\"%s\" %s %s' % (
+        self.run('cd %s\win32 && cscript configure.js cruntime=/%s include=\"%s\" %s %s' % (
             self.src_dir,
             self.settings.compiler.runtime,
             icu_headers_paths,
